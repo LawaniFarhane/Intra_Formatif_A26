@@ -18,31 +18,90 @@ export default function Home() {
   const [nbPizzas, setNbPizzas] = React.useState<number>(0);
 
   useEffect(() => {
-      connectToHub();
-    }, []);
+    const connection = connectToHub();
+
+    return () => {
+        void connection.stop();
+    };
+}, []);
 
   function connectToHub() {
-    let newHubConnection = new HubConnectionBuilder()
-    .withUrl('http://localhost:5282/hubs/pizza')
-    .build();
+    const connection = new HubConnectionBuilder()
+        .withUrl("http://localhost:5282/hubs/pizza")
+        .build();
 
-    // TODO: Mettre isConnected à true seulement une fois que la connection au Hub est faite
-    setIsConnected(true);
-  }
+    connection.on("UpdateNbUsers", (count) => {
+        setUserCount(count);
+    });
 
-  function selectChoice(selectedChoice:number) {
-    setSelectedChoice(selectedChoice);
-  }
+    connection.on("UpdateMoney", (amount) => {
+        setMoney(amount);
+    });
 
-  function unselectChoice() {
+    connection.on("UpdateNbPizzasAndMoney", (pizzas, amount) => {
+        setNbPizzas(pizzas);
+        setMoney(amount);
+    });
+
+    connection.on("UpdatePizzaPrice", (price) => {
+        setPizzaPrice(price);
+    });
+
+    connection.onclose(() => {
+        setIsConnected(false);
+    });
+
+    setHubConnection(connection);
+
+    connection.start()
+        .then(() => {
+            setIsConnected(true);
+        })
+        .catch((error) => {
+            console.error("Erreur connexion :", error);
+        });
+
+    return connection;
+}
+
+  async function selectChoice(choice: number) {
+    if (!hubConnection) return;
+
+    await hubConnection.invoke("SelectChoice", choice);
+    setSelectedChoice(choice);
+}
+
+  async function unselectChoice() {
+    if (!hubConnection || selectedChoice < 0) return;
+
+    await hubConnection.invoke(
+        "UnselectChoice",
+        selectedChoice
+    );
+
     setSelectedChoice(-1);
-  }
+    setPizzaPrice(0);
+    setMoney(0);
+    setNbPizzas(0);
+}
 
-  function addMoney() {
-  }
+  async function addMoney() {
+    if (!hubConnection || selectedChoice < 0) return;
 
-  function buyPizza() {
-  }
+    await hubConnection.invoke(
+        "AddMoney",
+        selectedChoice
+    );
+}
+
+  async function buyPizza() {
+    if (!hubConnection || selectedChoice < 0) return;
+
+    await hubConnection.invoke(
+        "BuyPizza",
+        selectedChoice
+    );
+}
 
   return (
     <>
