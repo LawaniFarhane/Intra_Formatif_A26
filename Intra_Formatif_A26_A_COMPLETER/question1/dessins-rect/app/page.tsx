@@ -24,19 +24,61 @@ export default function Home() {
     drawCircle(3,1);
   }
 
-  async function afficherEvents1(){
+  async function afficherEvents1() {
     clearShapes();
-    // TODO: Il faut appeler le serveur pour obtenir l'event retourné
-  }
 
-  async function afficherEvents2(){
+    try {
+        console.log("1. Bouton cliqué");
+
+        const response = await axios.get(
+            "http://localhost:5269/api/Dessins/GetDrawing1"
+        );
+
+        await applyEvents(response.data);
+
+    } catch (error) {
+        console.error("3. Erreur Axios :", error);
+    }
+}
+
+  async function afficherEvents2() {
     clearShapes();
-    // TODO: Il faut appeler le serveur pour obtenir la séquence d'événements 2 (que vous devez créer sur le serveur)
-  }
 
-  async function applyEvents(event:any){
-    // TODO: Il faut traiter les événements reçus du serveur et dessiner les formes correspondantes
-  }
+    try {
+        const response = await axios.get(
+            "http://localhost:5269/api/Dessins/GetDrawing2"
+        );
+
+        await applyEvents(response.data);
+    }
+    catch (error) {
+        console.error("Erreur :", error);
+    }
+}
+
+  async function applyEvents(event: any) {
+    if (event.type === "Square") {
+        drawSquare(event.x, event.y);
+    }
+    else if (event.type === "Circle") {
+        drawCircle(event.x, event.y);
+    }
+    else if (event.type === "Star") {
+        drawStar(event.x, event.y, event.innerRadius);
+    }
+    else if (event.type === "Wait") {
+        await wait(event.seconds);
+    }
+    else if (event.type === "ChangeColor") {
+        currentColor.current = event.color;
+    }
+
+    if (event.drawingEvents) {
+        for (const child of event.drawingEvents) {
+            await applyEvents(child);
+        }
+    }
+}
 
   // ATTENTION: Les méthodes suivantes n'ont pas besoin d'être modifiées pour répondre à la question
 
