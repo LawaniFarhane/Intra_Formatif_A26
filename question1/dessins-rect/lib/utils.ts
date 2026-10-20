@@ -13,6 +13,8 @@ export function createCircle(x: number, y: number, color: string){
   return { type: 'circle', props: { x: 100 * x + 50, y: 100 * y + 50, radius: 50, fill: color } };
 }
 
+// Konva a besoin du nombre de branches pour construire les sommets de l'étoile.
+// Le rayon intérieur vient du serveur; le rayon extérieur reste fixé à 50 pixels.
 export function createStar(x: number, y: number, innerRadius:number, color: string){
-  return { type: 'star', props: { x: 100 * x + 50, y: 100 * y + 50, innerRadius: innerRadius, outerRadius: 50, fill: color } };
+  return { type: 'star', props: { x: 100 * x + 50, y: 100 * y + 50, numPoints: 5, innerRadius: innerRadius, outerRadius: 50, fill: color } };
 }
